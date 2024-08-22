@@ -6,6 +6,8 @@
 #ifndef TREE_HPP_
 #define TREE_HPP_
 
+#include <utility>
+
 namespace dst {
 
 /**

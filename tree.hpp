@@ -317,15 +317,15 @@ tree<_type, _index_type, _functor>::_insert(node* cur, _index_type index, _type 
 	auto range = cur->range();
 	auto mid = range.first + (range.second - range.first) / 2;
 
+	if(range.first == range.second && range.first == index) {
+		cur->value() = value;
+		return cur;
+	}
+
 	if(index < range.first || index >= range.second) {
 		node* par = _extend(cur, index);
 		cur->parent() = par;
 		return _insert(par, index, value);
-	}
-
-	if(range.first == range.second) {
-		cur->value() = value;
-		return cur;
 	}
 	
 	auto& branch = (index < mid) ? cur->left() : cur->right();

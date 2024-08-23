@@ -6,6 +6,7 @@
 #ifndef TREE_HPP_
 #define TREE_HPP_
 
+#include <functional>
 #include <utility>
 
 namespace dst {
@@ -26,7 +27,7 @@ namespace dst {
  * @tparam _tindex The type of the indices used in the tree, which can be different from the type of the values but must be integral.
  * @tparam _functor The functor used to aggregate the values of the tree.
  */
-template<typename _tvalue, typename _tindex, class _functor>
+template<typename _tvalue, typename _tindex, class _functor = std::plus<_tvalue>>
 class tree {
 public:
 	/**
@@ -159,7 +160,7 @@ private:
 	 * @brief Internal function to erase a value at a given index in the tree.
 	 * 
 	 * This method removes the node at the index (with its value) from the tree. Also removes its direct parent if it has only one child and
-	 * connects the other child to the grandparent to maintain O(N) nodes.
+	 * connects the other child to the grandparent to keep the amount of nodes linear.
 	 * 
 	 * @param cur The current node.
 	 * @param index The index to erase the value.
@@ -326,7 +327,7 @@ tree<_tvalue, _tindex, _functor>::_insert(node* cur, const _tindex& index, const
 	auto range = cur->range();
 	auto mid = range.first + (range.second - range.first) / 2;
 
-	if(range.first == range.second && range.first == index) {
+	if(range.first == range.second && range.first == index) { // Simply return the node if already exists
 		cur->value() = value;
 		return cur;
 	}
@@ -354,15 +355,18 @@ tree<_tvalue, _tindex, _functor>::_erase(node* cur, const _tindex& index) {
 	auto mid = range.first + (range.second - range.first) / 2;
 
 	if(range.first == range.second) {
-		if(cur == _root) _root = nullptr;
-		delete cur;
-		return nullptr;
+		if(range.first == index) { // Only erase if found
+			if(cur == _root) _root = nullptr;
+			delete cur;
+			cur = nullptr;
+		}
+		return cur;
 	}
 
 	if(index < mid) cur->left() = _erase(cur->left(), index);
 	else cur->right() = _erase(cur->right(), index);
 
-	if(!cur->left() || !cur->right()) {
+	if(!cur->left() ^ !cur->right()) { // Prune the excessive parent
 		node* child = (cur->left() == nullptr) ? cur->right() : cur->left();
 		if(cur == _root) _root = child;
 		else child->parent() = cur->parent();

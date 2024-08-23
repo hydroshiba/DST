@@ -43,6 +43,13 @@ public:
 	void insert(const _tindex& index, const _tvalue& value);
 
 	/**
+	 * @brief Aggregate a value to a given index in the tree.
+	 * @param index The index to apply the value on.
+	 * @param value The value to apply.
+	 */
+	void apply(const _tindex& index, const _tvalue& value);
+
+	/**
 	 * @brief Remove an index (with its value) from the tree.
 	 * @param index The index to be removed.
 	 */
@@ -157,6 +164,19 @@ private:
 	node* _insert(node* cur, const _tindex& index, const _tvalue& value);
 
 	/**
+	 * @brief Internal function to aggregate a value to a given index in the tree.
+	 * 
+	 * This method aggregates the value to the given index's value in the tree. If the index is outside the current range of the node, the range
+	 * is extended and insertion is called on the new parent.
+	 * 
+	 * @param cur The current node.
+	 * @param index The index to apply the value.
+	 * @param value The value to apply.
+	 * @return The root of the tree.
+	 */
+	node* _apply(node* cur, const _tindex& index, const _tvalue& value);
+
+	/**
 	 * @brief Internal function to erase a value at a given index in the tree.
 	 * 
 	 * This method removes the node at the index (with its value) from the tree. Also removes its direct parent if it has only one child and
@@ -210,7 +230,12 @@ void tree<_tvalue, _tindex, _functor>::insert(const _tindex& index, const _tvalu
 	_insert(_root, index, value);
 }
 
-template<typename _tvalue, typename _tindex, class _functor>
+template <typename _tvalue, typename _tindex, class _functor>
+void tree<_tvalue, _tindex, _functor>::apply(const _tindex& index, const _tvalue& value) {
+	_apply(_root, index, value);
+}
+
+template <typename _tvalue, typename _tindex, class _functor>
 void tree<_tvalue, _tindex, _functor>::erase(const _tindex& index) {
 	_erase(_root, index);
 }
@@ -323,19 +348,52 @@ tree<_tvalue, _tindex, _functor>::_insert(node* cur, const _tindex& index, const
 	auto range = cur->range();
 	auto mid = range.first + (range.second - range.first) / 2;
 
-	if(range.first == range.second && range.first == index) { // Simply return the node if already exists
-		cur->value() = value;
-		return cur;
+	if(range.first == range.second) { // Collided?
+		if(range.first == index) { // Great, update the value
+			cur->value() = value;
+			return cur;
+		}
 	}
 
-	if(index < range.first || index >= range.second) {
+	if(index < range.first || index >= range.second) { // Outside? Better call extend
 		node* par = _extend(cur, index);
 		cur->parent() = par;
 		return _insert(par, index, value);
 	}
-	
+
 	auto& branch = (index < mid) ? cur->left() : cur->right();
 	branch = _insert(branch, index, value);
+	branch->parent() = cur;
+
+	cur->value() = _func(cur->left()->value(), cur->right()->value());
+	return cur;
+}
+
+template <typename _tvalue, typename _tindex, class _functor>
+typename tree<_tvalue, _tindex, _functor>::node*
+tree<_tvalue, _tindex, _functor>::_apply(node* cur, const _tindex& index, const _tvalue& value) {
+	// Almost copy-pasted implementation from insert
+    if(cur == nullptr) {
+		cur = new node(index, value);
+		if(_root == nullptr) _root = cur;
+		return cur;
+	}
+
+	auto range = cur->range();
+	auto mid = range.first + (range.second - range.first) / 2;
+
+	if(range.first == range.second) { // Collided?
+		if(range.first == index) { // Great, apply the value
+			cur->value() = _func(cur->value(), value);
+			return cur;
+		}
+	}
+
+	if(index < range.first || index >= range.second) // Outside? Better call insert
+		return _insert(cur, index, value);
+	
+	auto& branch = (index < mid) ? cur->left() : cur->right();
+	branch = _apply(branch, index, value);
 	branch->parent() = cur;
 
 	cur->value() = _func(cur->left()->value(), cur->right()->value());

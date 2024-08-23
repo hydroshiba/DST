@@ -89,8 +89,8 @@ private:
 	 */
 	class node {
 	private:
-		_tvalue _value;
 		std::pair<_tindex, _tindex> _range;
+		_tvalue _value;
 
 		node* _parent;
 		node* _left;

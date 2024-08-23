@@ -22,14 +22,64 @@ namespace dst {
  * 
  * - Querying the aggregate value of a given range.
  *
- * @tparam _type The type of the values stored in the tree indices.
- * @tparam _index_type The type of the indices used in the tree, which can be different from the type of the values but must be integral.
+ * @tparam _tvalue The type of the values stored in the tree indices.
+ * @tparam _tindex The type of the indices used in the tree, which can be different from the type of the values but must be integral.
  * @tparam _functor The functor used to aggregate the values of the tree.
  */
-template<typename _type, typename _index_type, class _functor>
+template<typename _tvalue, typename _tindex, class _functor>
 class tree {
-private:
+public:
+	/**
+	 * @brief Constructor for the tree.
+	 */
+	tree();
 
+	/**
+	 * @brief Insert a value at a given index in the tree.
+	 * @param index The index to insert the value.
+	 * @param value The value to insert.
+	 */
+	void insert(const _tindex& index, const _tvalue& value);
+
+	/**
+	 * @brief Remove an index (with its value) from the tree.
+	 * @param index The index to be removed.
+	 */
+	void erase(const _tindex& index);
+
+	/**
+	 * @brief Aggregate the values in the given range for which the indices exist in the tree. The range is inclusive.
+	 * @param start The start of the range to query.
+	 * @param end The end of the range to query.
+	 * @return The aggregate value of the range.
+	 */
+	_tvalue query(const _tindex& start, const _tindex& end);
+
+	/**
+	 * @brief Aggregate the values in the given range for which the indices exist in the tree. The range is inclusive.
+	 * @param segment The range to query.
+	 * @return The aggregate value of the range.
+	 */
+	_tvalue query(const std::pair<_tindex, _tindex>& range);
+
+	/**
+	 * @brief Access the value at a given index in the tree.
+	 * @param index The index to access.
+	 * @return The value at the index.
+	 */
+	_tvalue operator[](const _tindex& index);
+
+	/**
+	 * @brief Clear the tree by deleting all the nodes.
+	 */
+	void clear();
+
+	/**
+	 * @brief Destructor for the tree.
+	 */
+	~tree();	
+
+private:
 	/**
 	 * @brief The node structure of the tree.
 	 * 
@@ -39,26 +89,31 @@ private:
 	 */
 	class node {
 	private:
-		_type _value;
-		std::pair<_index_type, _index_type> _range;
+		_tvalue _value;
+		std::pair<_tindex, _tindex> _range;
 
 		node* _parent;
 		node* _left;
 		node* _right;
 	
 	public:
-		node(std::pair<_index_type, _index_type> range, _type value, node* p, node* l, node* r)
+		node(const std::pair<_tindex, _tindex>& range, const _tvalue& value, node* p, node* l, node* r)
 			: _range(range), _value(value), _parent(p), _left(l), _right(r) {}
-		node(std::pair<_index_type, _index_type> range, _type value)
+
+		node(const std::pair<_tindex, _tindex>& range, const _tvalue& value)
 			: node(range, value, nullptr, nullptr, nullptr) {}
-		node(std::pair<_index_type, _index_type> range)
-			: node(range, _type()) {}
+		
+		node(const std::pair<_tindex, _tindex>& range)
+			: node(range, _tvalue()) {}
 
-		node(_index_type index, _type value) : node(std::make_pair(index, index), value) {}
-		node(_index_type index) : node(std::make_pair(index, index)) {}
+		node(const _tindex& index, const _tvalue& value)
+			: node(std::make_pair(index, index), value) {}
 
-		_type& value() { return _value; }
-		std::pair<_index_type, _index_type> range() { return _range; }
+		node(const _tindex& index)
+			: node(std::make_pair(index, index)) {}
+
+		_tvalue& value() { return _value; }
+		std::pair<_tindex, _tindex> range() { return _range; }
 
 		node*& parent() { return _parent; }
 		node*& left() { return _left; }
@@ -86,7 +141,7 @@ private:
 	 * @param index The index to include in the range.
 	 * @return The new node with the extended range.
 	 */
-	node* _extend(node* cur, _index_type index);
+	node* _extend(node* cur, const _tindex& index);
 
 	/**
 	 * @brief Internal function to insert a value at a given index in the tree.
@@ -98,7 +153,7 @@ private:
 	 * @param value The value to insert.
 	 * @return The root of the tree.
 	 */
-	node* _insert(node* cur, _index_type index, _type value);
+	node* _insert(node* cur, const _tindex& index, const _tvalue& value);
 
 	/**
 	 * @brief Internal function to erase a value at a given index in the tree.
@@ -110,7 +165,7 @@ private:
 	 * @param index The index to erase the value.
 	 * @return The root of the tree.
 	 */
-	node* _erase(node* cur, _index_type index);
+	node* _erase(node* cur, const _tindex& index);
 
 	/**
 	 * @brief Internal function to query the aggregate value of a given range in the tree.
@@ -121,7 +176,7 @@ private:
 	 * @param segment The range to query.
 	 * @return The aggregate value of the range.
 	 */
-	_type _query(node* cur, std::pair<_index_type, _index_type> segment);
+	_tvalue _query(node* cur, const std::pair<_tindex, _tindex>& segment) const;
 
 	/**
 	 * @brief Internal function to clear the tree.
@@ -131,63 +186,17 @@ private:
 	 * @param cur The current node.
 	 */
 	void _clear(node* cur);
-
-public:
-	/**
-	 * @brief Constructor for the tree.
-	 */
-	tree();
-
-	/**
-	 * @brief Insert a value at a given index in the tree.
-	 * @param index The index to insert the value.
-	 * @param value The value to insert.
-	 */
-	void insert(_index_type index, _type value);
-
-	/**
-	 * @brief Remove an index (with its value) from the tree.
-	 * @param index The index to be removed.
-	 */
-	void erase(_index_type index);
-
-	/**
-	 * @brief Aggregate the values in the given range for which the indices exist in the tree. The range is inclusive.
-	 * @param start The start of the range to query.
-	 * @param end The end of the range to query.
-	 * @return The aggregate value of the range.
-	 */
-	_type query(_index_type start, _index_type end);
-
-	/**
-	 * @brief Aggregate the values in the given range for which the indices exist in the tree. The range is inclusive.
-	 * @param segment The range to query.
-	 * @return The aggregate value of the range.
-	 */
-	_type query(std::pair<_index_type, _index_type> segment);
-
-	/**
-	 * @brief Clear the tree by deleting all the nodes.
-	 */
-	void clear();
-
-	/**
-	 * @brief Destructor for the tree.
-	 */
-	~tree();
 };
 
 /**
  ************************************** Special member functions **************************************
  */
 
-// Constructor
-template<typename _type, typename _index_type, class _functor>
-tree<_type, _index_type, _functor>::tree() : _root(nullptr) {}
+template<typename _tvalue, typename _tindex, class _functor>
+tree<_tvalue, _tindex, _functor>::tree() : _root(nullptr) {}
 
-// Destructor
-template<typename _type, typename _index_type, class _functor>
-tree<_type, _index_type, _functor>::~tree() {
+template<typename _tvalue, typename _tindex, class _functor>
+tree<_tvalue, _tindex, _functor>::~tree() {
 	clear();
 }
 
@@ -195,33 +204,33 @@ tree<_type, _index_type, _functor>::~tree() {
  ******************************************* Public methods *******************************************
  */
 
-// Insert
-template<typename _type, typename _index_type, class _functor>
-void tree<_type, _index_type, _functor>::insert(_index_type index, _type value) {
+template<typename _tvalue, typename _tindex, class _functor>
+void tree<_tvalue, _tindex, _functor>::insert(const _tindex& index, const _tvalue& value) {
 	_insert(_root, index, value);
 }
 
-// Erase
-template<typename _type, typename _index_type, class _functor>
-void tree<_type, _index_type, _functor>::erase(_index_type index) {
+template<typename _tvalue, typename _tindex, class _functor>
+void tree<_tvalue, _tindex, _functor>::erase(const _tindex& index) {
 	_erase(_root, index);
 }
 
-// Endpoints query
-template<typename _type, typename _index_type, class _functor>
-_type tree<_type, _index_type, _functor>::query(_index_type start, _index_type end) {
+template<typename _tvalue, typename _tindex, class _functor>
+_tvalue tree<_tvalue, _tindex, _functor>::query(const _tindex& start, const _tindex& end) {
 	return _query(_root, std::make_pair(start, end));
 }
 
-// Pair query
-template<typename _type, typename _index_type, class _functor>
-_type tree<_type, _index_type, _functor>::query(std::pair<_index_type, _index_type> range) {
+template<typename _tvalue, typename _tindex, class _functor>
+_tvalue tree<_tvalue, _tindex, _functor>::query(const std::pair<_tindex, _tindex>& range) {
 	return _query(_root, range);
 }
 
-// Clear
-template<typename _type, typename _index_type, class _functor>
-void tree<_type, _index_type, _functor>::clear() {
+template<typename _tvalue, typename _tindex, class _functor>
+_tvalue tree<_tvalue, _tindex, _functor>::operator[](const _tindex& index) {
+	return _query(_root, std::make_pair(index, index));
+}
+
+template<typename _tvalue, typename _tindex, class _functor>
+void tree<_tvalue, _tindex, _functor>::clear() {
 	_clear(_root);
 	_root = nullptr;
 }
@@ -230,20 +239,19 @@ void tree<_type, _index_type, _functor>::clear() {
  ******************************************* Private methods ******************************************
  */
 
-// Internal extend
-template<typename _type, typename _index_type, class _functor>
-typename tree<_type, _index_type, _functor>::node*
-tree<_type, _index_type, _functor>::_extend(node* cur, _index_type index) {
+template<typename _tvalue, typename _tindex, class _functor>
+typename tree<_tvalue, _tindex, _functor>::node*
+tree<_tvalue, _tindex, _functor>::_extend(node* cur, const _tindex& index) {
 
 	// Range extension
 
-	std::pair<_index_type, _index_type> range;
+	std::pair<_tindex, _tindex> range;
 
 	if(cur->parent() == nullptr) { // Very unfortunate, we extend manually
 		range = cur->range();
 
-		_index_type dist = (index < range.first) ? range.second - index : index - range.first;
-		_index_type resolution = 1;
+		_tindex dist = (index < range.first) ? range.second - index : index - range.first;
+		_tindex resolution = 1;
 
 		while(resolution > dist) resolution /= 2;
 
@@ -306,10 +314,9 @@ tree<_type, _index_type, _functor>::_extend(node* cur, _index_type index) {
 	return par;
 }
 
-// Internal insert
-template<typename _type, typename _index_type, class _functor>
-typename tree<_type, _index_type, _functor>::node*
-tree<_type, _index_type, _functor>::_insert(node* cur, _index_type index, _type value) {
+template<typename _tvalue, typename _tindex, class _functor>
+typename tree<_tvalue, _tindex, _functor>::node*
+tree<_tvalue, _tindex, _functor>::_insert(node* cur, const _tindex& index, const _tvalue& value) {
 	if(cur == nullptr) {
 		cur = new node(index, value);
 		if(_root == nullptr) _root = cur;
@@ -338,10 +345,9 @@ tree<_type, _index_type, _functor>::_insert(node* cur, _index_type index, _type 
 	return cur;
 }
 
-// Internal erase
-template<typename _type, typename _index_type, class _functor>
-typename tree<_type, _index_type, _functor>::node*
-tree<_type, _index_type, _functor>::_erase(node* cur, _index_type index) {
+template<typename _tvalue, typename _tindex, class _functor>
+typename tree<_tvalue, _tindex, _functor>::node*
+tree<_tvalue, _tindex, _functor>::_erase(node* cur, const _tindex& index) {
 	if(cur == nullptr) return nullptr;
 	
 	auto range = cur->range();
@@ -369,10 +375,9 @@ tree<_type, _index_type, _functor>::_erase(node* cur, _index_type index) {
 	return cur;
 }
 
-// Internal query
-template<typename _type, typename _index_type, class _functor>
-_type tree<_type, _index_type, _functor>::_query(node* cur, std::pair<_index_type, _index_type> segment) {
-	if(cur == nullptr) return _type();
+template<typename _tvalue, typename _tindex, class _functor>
+_tvalue tree<_tvalue, _tindex, _functor>::_query(node* cur, const std::pair<_tindex, _tindex>& segment) const {
+	if(cur == nullptr) return _tvalue();
 
 	auto range = cur->range();
 	auto mid = range.first + (range.second - range.first) / 2;
@@ -389,12 +394,11 @@ _type tree<_type, _index_type, _functor>::_query(node* cur, std::pair<_index_typ
 	if(mid <= segment.first)
 		return _query(cur->right(), segment);
 
-	return _type();
+	return _tvalue();
 }
 
-// Internal clear
-template<typename _type, typename _index_type, class _functor>
-void tree<_type, _index_type, _functor>::_clear(node* cur) {
+template<typename _tvalue, typename _tindex, class _functor>
+void tree<_tvalue, _tindex, _functor>::_clear(node* cur) {
 	if(cur == nullptr) return;
 	_clear(cur->left());
 	_clear(cur->right());

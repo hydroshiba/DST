@@ -39,3 +39,7 @@ exec
 
 # MacOS
 .DS_Store
+
+# Testing source files
+test
+test.cpp

@@ -3,7 +3,6 @@
 
 #include <limits>
 #include <functional>
-#include <iostream>
 
 #include "tree.hpp"
 

@@ -12,7 +12,7 @@
 namespace dst {
 
 /**
- * @brief The core dynamic segment tree data structure.
+ * @brief The dynamic segment tree data structure.
  *
  * This class implements a dynamic segment tree data structure. A custom functor can be passed which is used to
  * aggregate the values of the tree. The tree supports the following operations:
@@ -245,7 +245,6 @@ typename tree<_tvalue, _tindex, _functor>::node*
 tree<_tvalue, _tindex, _functor>::_extend(node* cur, const _tindex& index) {
 
 	// Range extension
-
 	std::pair<_tindex, _tindex> range;
 
 	if(cur->parent() == nullptr) { // Very unfortunate, we extend manually
@@ -290,11 +289,9 @@ tree<_tvalue, _tindex, _functor>::_extend(node* cur, const _tindex& index) {
 		}
 	}
 
-	// Node creation
-
+	// Node creation and initialization
 	node* par = new node(range);
 	
-	// Parent assignment
 	par->parent() = cur->parent();
 	if(cur == _root) _root = par;
 	if(par->parent() != nullptr) {
@@ -302,7 +299,6 @@ tree<_tvalue, _tindex, _functor>::_extend(node* cur, const _tindex& index) {
 		else par->parent()->right() = par;
 	}
 
-	// Children assignment
 	if(index < cur->range().first) {
 		par->right() = cur;
 		par->left() = nullptr;

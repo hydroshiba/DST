@@ -25,7 +25,7 @@ namespace dst {
  *
  * @tparam _tvalue The type of the values stored in the tree indices.
  * @tparam _tindex The type of the indices used in the tree, which can be different from the type of the values but must be integral.
- * @tparam _functor The functor used to aggregate the values of the tree.
+ * @tparam _functor The functor used to aggregate the values of the tree. Default to std::plus<_tvalue>.
  */
 template<typename _tvalue, typename _tindex, class _functor = std::plus<_tvalue>>
 class tree {

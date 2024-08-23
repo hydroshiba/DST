@@ -34,7 +34,7 @@ int main() {
 			int index;
 			long long value;
 			std::cin >> index >> value;
-			tree.insert(index, tree[index] + value);
+			tree.apply(index, value);
 		}
 	}
 }

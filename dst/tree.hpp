@@ -3,8 +3,8 @@
  * @brief Implementation of the dynamic segment tree data structure.
  */
 
-#ifndef TREE_HPP_
-#define TREE_HPP_
+#ifndef DST_TREE_HPP_
+#define DST_TREE_HPP_
 
 #include <functional>
 #include <utility>
@@ -460,7 +460,9 @@ void tree<_tvalue, _tindex, _functor>::_clear(node* cur) {
 	if(cur == nullptr) return;
 	_clear(cur->left());
 	_clear(cur->right());
+	
 	delete cur;
+	cur = nullptr;
 }
 
 }

@@ -1,5 +1,5 @@
-#ifndef AGGREGATE_SET_HPP_
-#define AGGREGATE_SET_HPP_
+#ifndef DST_AGGREGATE_SET_HPP_
+#define DST_AGGREGATE_SET_HPP_
 
 #include <limits>
 #include <functional>

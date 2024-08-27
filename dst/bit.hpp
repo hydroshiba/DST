@@ -30,7 +30,7 @@ static constexpr unsigned char lookup[256] = {
 #if __cplusplus >= 201703L
 
 template<typename _type, std::size_t _width = (sizeof(_type) - 1) << 3>
-inline constexpr std::enable_if_t<std::is_integral_v<_type>, _type>
+inline constexpr std::enable_if_t<std::is_integral_v<_type>, std::size_t>
 log(_type value) {
 	if constexpr(_width == 0)
 		return lookup[value];
@@ -43,7 +43,7 @@ log(_type value) {
 #else
 
 template<typename _type>
-inline typename std::enable_if<std::is_integral<_type>::value, _type>::type
+inline typename std::enable_if<std::is_integral<_type>::value, std::size_t>::type
 log(_type value) {
 	unsigned char temp = 0;
 
